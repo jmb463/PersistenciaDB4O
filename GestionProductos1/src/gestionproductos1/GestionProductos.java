@@ -16,7 +16,6 @@ import java.util.Scanner;
 
 public class GestionProductos {
     private static EmbeddedObjectContainer oc;
-    int hola;
     
     public GestionProductos(){
         
@@ -56,7 +55,7 @@ public class GestionProductos {
             System.out.println("Error en el borrado" + e.getMessage());
             this.oc.rollback();
         }
-        this.oc.commit();
+        actualizarCambios();
     }
             
     public Almacen obtenerObjeto(Almacen almacen){
@@ -67,6 +66,7 @@ public class GestionProductos {
     public Articulo obtenerObjeto(Articulo articulo){
         System.out.println("Recuperando artículo...");
         return (Articulo) obtenerObjetoClave(articulo);
+        
     }
     
     public Producto obtenerObjeto(Producto producto){
@@ -75,13 +75,23 @@ public class GestionProductos {
     }
     
     public Envase obtenerObjeto(Envase envase){
-        System.out.println("Recuperando objeto...");
+        System.out.println("Recuperando envase...");
         return (Envase) obtenerObjetoClave(envase);
     }
     
     public UnidadDeMedida obtenerObjeto(UnidadDeMedida medida){
         System.out.println("Recuperando unidad de medida...");
         return (UnidadDeMedida) obtenerObjetoClave(medida);
+    }
+    
+    public ProductoEnvasado obtenerObjeto(ProductoEnvasado pe){
+        System.out.println("Recuperando producto envasado...");
+        return (ProductoEnvasado) obtenerObjetoClave(pe);
+    }
+    
+    public ProductoAGranel obtenerObjeto(ProductoAGranel pag){
+        System.out.println("Recuperando producto a granel...");
+        return (ProductoAGranel) obtenerObjetoClave(pag);
     }
     
     public List<Almacen> obtenerAlmacenes(){
@@ -104,11 +114,20 @@ public class GestionProductos {
         return oc.queryByExample(new UnidadDeMedida());
     }
     
+    public List<ProductoEnvasado> obtenerProductosEnvasados(){
+        return oc.queryByExample(new ProductoEnvasado());
+    }
+    
+    public List<ProductoAGranel> obtenerProductosAGranel(){
+        return oc.queryByExample(new ProductoAGranel());
+    }
+    
     public List<Producto> obtenerProductosDeUnArticulo(Articulo articulo){
         Query q1 = oc.query();
         q1.constrain(Producto.class);
         q1.descend("articulo").descend("idArticulo").constrain(articulo.getId());
         ObjectSet<Producto> set = q1.execute();
+        System.out.println(set.toString());
         return set;
     }
     
@@ -123,6 +142,7 @@ public class GestionProductos {
         
         for(Producto prod: producto){
             listProd.add(producto.next());
+            System.out.println(producto.toString());
             
         }
         
@@ -153,6 +173,7 @@ public class GestionProductos {
                 return m.getStock(producto).getCantidad()<= cantidad;
             }
         });
+        System.out.println(result.toString());
         return result;
     }
     
@@ -166,55 +187,12 @@ public class GestionProductos {
         }
         else{
             System.out.println("No se ha encontrado el objeto indicado, se creará en la base de datos.");
-            oc.store(o);
-            oc.commit();
+            actualizarCambios(o);
         }
         return o;
     }
     
-    public List<Object> obtenerObjetoLista(int hola){
-        return null;
-    }
-    
     public void InsertarDatos(GestionProductos gp){
-        /*try{
-            //Añadir un almacén
-            Almacen alm = gp.obtenerObjeto(new Almacen("1", "Almacen Palma"));
-
-            //Añadir seis articulos
-            Articulo art =  gp.obtenerObjeto(new Articulo("1", "Papel"));
-            Articulo art2 = gp.obtenerObjeto(new Articulo("2", "Ordenador"));
-            Articulo art3 = gp.obtenerObjeto(new Articulo("3", "Mochila"));
-            Articulo art4 = gp.obtenerObjeto(new Articulo("4", "Pizza"));
-            Articulo art5 = gp.obtenerObjeto(new Articulo("5", "Auriculares"));
-            Articulo art6 = gp.obtenerObjeto(new Articulo("6", "Móvil"));
-        
-            //Añadir tres unidades de medida
-            UnidadDeMedida udm =  gp.obtenerObjeto(new UnidadDeMedida("kg", "kilogramo"));
-            UnidadDeMedida udm2 = gp.obtenerObjeto(new UnidadDeMedida("l", "litros"));
-            UnidadDeMedida udm3 = gp.obtenerObjeto(new UnidadDeMedida("g", "gramos"));
-        
-            //Añadir tres envases 
-            Envase env =  gp.obtenerObjeto(new Envase("Paquete", 20, udm));
-            Envase env2 = gp.obtenerObjeto(new Envase("Botella", 1.5, udm2));
-            Envase env3 = gp.obtenerObjeto(new Envase("Bandeja", 40, udm3));
-        
-       
-            //Añadir diez productos de diferente tipo
-            gp.obtenerObjeto(new Producto(art, "Hacendado", 2.10));
-            gp.obtenerObjeto(new Producto(art2, "Acer", 100.00));
-            gp.obtenerObjeto(new Producto(art3, "Port Designs", 20.00));
-            gp.obtenerObjeto(new Producto(art4, "Casa Tarradellas", 20.00));
-            gp.obtenerObjeto(new Producto(art5, "Apple" , 500.00));
-            gp.obtenerObjeto(new Producto(art6, "BQ", 250.00));
-            gp.obtenerObjeto(new Producto(art2, "Lenovo", 900.00));
-            gp.obtenerObjeto(new Producto(art3, "Trust", 50.00));
-            gp.obtenerObjeto(new Producto(art4, "Buittoni", 25.50));
-            gp.obtenerObjeto(new Producto(art5, "Sony", 60.69));
-        
-            //Asignación del stock para cada producto al almacén
-        }*/
-        
         try {
             gp.obtenerObjeto(new UnidadDeMedida("kg", "kilogramo"));
             gp.obtenerObjeto(new UnidadDeMedida("l", "litro"));
@@ -247,6 +225,7 @@ public class GestionProductos {
             u = gp.obtenerObjeto(new UnidadDeMedida("l"));
             env = gp.obtenerObjeto(new Envase("Botella", 1.5, u));
             gp.obtenerObjeto(new ProductoEnvasado(art,"Font Bella",2.10,env));
+            
 
             //Articulo 5
             art = gp.obtenerObjeto(new Articulo("Manzana"));
@@ -261,7 +240,7 @@ public class GestionProductos {
  
             List<Producto> listaProd = gp.obtenerProductos();
  
-            double[] cantidad = new double[]{5.0, 10.0, 15.0, 25.0, 8.0, 2.0, 17.0, 45.0, 12.5, 1.25};
+            double[] cantidad = new double[]{5.2, 11.0, 15.5, 25.0, 28.0, 23.0, 11.0, 34.0, 2.5, 1.50};
  
             for(int i=0; i<listaProd.size(); i++){
                 Stock stc;
@@ -279,17 +258,21 @@ public class GestionProductos {
     
     public void modificarDatos(GestionProductos gp){
         try {
+            
+            //1 Incrementación del articulo en un 5%
             List<Producto> lista = gp.obtenerProductosDeUnArticulo(new Articulo("Pasta"));
             for(Producto prod: lista){
                 prod.setPrecio(prod.getPrecio()*1.05);
             }
  
             gp.actualizarCambios();
- 
+            
+            
+            //2 y 3
             Almacen alm = gp.obtenerObjeto(new Almacen("01"));
             lista = gp.obtenerProductosDeUnArticulo(new Articulo("Manzana"));
             for(Producto prod2: lista){
-                alm.decrementarStockProducto(prod2, 10.0);
+                alm.decrementarStockProducto(prod2, 11.0);
             }
  
             gp.actualizarCambios();
@@ -297,8 +280,10 @@ public class GestionProductos {
             alm = gp.obtenerObjeto(new Almacen("01"));
             lista = gp.obtenerProductosDeUnArticulo(new Articulo("Agua"));
             for(Producto prod3: lista){
-                alm.decrementarStockProducto(prod3, 12.0);
+                alm.decrementarStockProducto(prod3, 13.0);
             }
+            
+            gp.actualizarCambios();
  
         }
         catch(Db4oException ex){
@@ -307,26 +292,24 @@ public class GestionProductos {
     }
     
     public void mostrarProductos(GestionProductos gp, int cant){
-        try {
-            List<Producto> lista = gp.obtenerProductosDeUnAlmacen("01", cant);
-            System.out.println("Productos con stock menor o igual a " + cant);
-            for(Producto prod: lista){
-                System.out.println(prod.toString());
-            }
+        List<Producto> lista = gp.obtenerProductosDeUnAlmacen("01", cant);
+        for(Producto prod: lista){
+            System.out.println(prod.toString());
         }
-        catch(Db4oException ex){
-            System.out.println("Error en la modificación de articulos " + ex.getMessage());
-        }
+       
     }
     
     public static void main(String[] args) {
-        Articulo art = new Articulo();
-        Almacen alm = new Almacen();
-        Envase env = new Envase();
-        Producto pro = new Producto();
-        UnidadDeMedida udm = new UnidadDeMedida();
+        Articulo art = new Articulo("Papel");
+        Almacen alm = new Almacen("01");
+        UnidadDeMedida udm = new UnidadDeMedida("l");
+        Envase env = new Envase("Botella", 12, udm);
+        Producto pro = new Producto(art, "Mercadona", 1.20);
+        ProductoEnvasado pe = new ProductoEnvasado(art, "Scotex", 2.00, env);
+        ProductoAGranel pag = new ProductoAGranel(art, 20, udm);
         Scanner ent = new Scanner(System.in);
         GestionProductos gp = new GestionProductos();
+        Boolean seguir = true;
         
         //Abrir almacen 
         gp.abrirAlmacen();
@@ -334,90 +317,121 @@ public class GestionProductos {
         //Insertar datos
         gp.InsertarDatos(gp);
         
-        gp.mostrarProductos(gp,14);
-        
-        /*//Realizar consultas        
-        
-        
-        System.out.println("Introduzca que acción quiere realizar: " );
-        System.out.println(" \n 1. Encontrar un objeto \n 2. Mostrar lista de un objeto \n 3. Realizar consulta \n 4. Eliminar una instancia");
-        int s = ent.nextInt();
-        switch(s){
-            case 1: 
-                System.out.println("¿Que tipo de objeto quiere seleccionar? \n 1. Articulo \n 2. Almacen \n 3. Producto \n 4. Envase \n 5. Unidad de Medida");
-                s = ent.nextInt();
-                switch(s){
-                    case 1:
-                        gp.obtenerObjeto(art);
-                        break;
+        //Realizar consultas       
+        while(seguir){
+            System.out.println("Introduzca que acción quiere realizar: " );
+            System.out.println(" \n 1. Encontrar un objeto \n 2. Mostrar lista de un objeto \n 3. Realizar consulta \n 4. Eliminar una instancia \n 5. Actualizar datos \n 6. Mostrar stock");
+            int s = ent.nextInt();
+            switch(s){
+                case 1: 
+                    System.out.println("¿Que tipo de objeto quiere seleccionar? \n 1. Articulo \n 2. Almacen \n 3. Producto \n 4. Envase \n 5. Unidad de Medida \n 6. Producto Envasado \n 7. Producto a granel");
+                    s = ent.nextInt();
+                    switch(s){
+                        case 1:
+                            gp.obtenerObjeto(art);
+                            break;
                     
-                    case 2:
-                        gp.obtenerObjeto(alm);
-                        break;
+                        case 2:
+                            gp.obtenerObjeto(alm);
+                            break;
                         
-                    case 3:
-                        gp.obtenerObjeto(pro);
-                        break;
+                        case 3:
+                            gp.obtenerObjeto(pro);
+                            break;
                         
-                    case 4:
-                        gp.obtenerObjeto(env);
-                        break;
+                        case 4:
+                            gp.obtenerObjeto(env);
+                            break;
                         
-                    case 5:
-                        gp.obtenerObjeto(udm);
-                        break;
-                }
-                break;
+                        case 5:
+                            gp.obtenerObjeto(udm);
+                            break;
+                        
+                        case 6:
+                            gp.obtenerObjeto(pe);
+                            break;
+                        
+                        case 7: 
+                            gp.obtenerObjeto(pag);
+                            break;
+                    }
+                    break;
                 
-            case 2:
-                System.out.println("¿Que lista quiere mostrar? \n 1. Articulos \n 2. Almacenes \n 3. Productos \n 4. Envases \n 5. Unidades de Medida");
-                s = ent.nextInt();
-                switch(s){
-                    case 1:
-                        gp.obtenerArticulos();
-                        break;
+                case 2:
+                    System.out.println("¿Que lista quiere mostrar? \n 1. Articulos \n 2. Almacenes \n 3. Productos \n 4. Envases \n 5. Unidades de Medida \n 6. Productos envasados \n 7. Productos a granel");
+                    s = ent.nextInt();
+                    switch(s){
+                        case 1:
+                            gp.obtenerArticulos();
+                            break;
                     
-                    case 2:
-                        gp.obtenerAlmacenes();
-                        break;
+                        case 2:
+                            gp.obtenerAlmacenes();
+                            break;
                         
-                    case 3:
-                        gp.obtenerProductos();
-                        break;
+                        case 3:
+                            gp.obtenerProductos();
+                            break;
                         
-                    case 4:
-                        gp.obtenerEnvases();
-                        break;
+                        case 4:
+                            gp.obtenerEnvases();
+                            break;
                         
-                    case 5:
-                        gp.obtenerUnidadesDeMedida();
-                        break;
-                }
-                break;
+                        case 5:
+                            gp.obtenerUnidadesDeMedida();
+                            break;
+                        
+                        case 6:
+                            gp.obtenerProductosEnvasados();
+                            break;
+                        
+                        case 7:
+                            gp.obtenerProductosAGranel();
+                            break;
+                    }
+                    break;
             
-            case 3: 
-                System.out.println("¿Que consulta quiere realizar? \n 1. Tots els productes d’un determinat article. \n 2. Tots el productes limitats pel preu i corresponents a aquells articles \n 3. Tots els productes d’un magatzem especificat que tinguin algun un estoc menor");
-                s = ent.nextInt();
-                switch(s){
-                    case 1:
-                        gp.obtenerProductosDeUnArticulo("2");
-                        break;
+                case 3: 
+                    System.out.println("¿Que consulta quiere realizar? \n 1. Todos los productos de un determinado articulo. \n 2. Todos los productos limitados por precio y correspondientes a articulos. \n 3. Todos los productos de un almacén especificado que tengan un stock menor a una cantidad");
+                    s = ent.nextInt();
+                    switch(s){
+                        case 1:
+                            gp.obtenerProductosDeUnArticulo(art);
+                            break;
                     
-                    case 2:
-                        gp.obtenerProductosLimitados(3, 6, "Pasta");
-                        break;
+                        case 2:
+                            gp.obtenerProductosLimitados(10, 0, "Papel");
+                            break;
                         
-                    case 3:
-                        gp.obtenerProductosDeUnAlmacen("2", 2);
-                        break;
-                }
-                break;
+                        case 3:
+                            gp.obtenerProductosDeUnAlmacen("01", 10);
+                            break;
+                    }
+                    break;
             
-            case 4:
-                gp.eliminarInstancias(alm);
-                break;
+                case 4:
+                    gp.eliminarInstancias(alm);
+                    break;
+                
+                case 5:
+                    gp.modificarDatos(gp);
+                    break;
+                
+                case 6:
+                    int cantidad = 10;
+                    System.out.println("Productos con stock menor o igual a " + cantidad);
+                    gp.mostrarProductos(gp, cantidad);
+            }
+            System.out.println("¿Quiere continuar? Responda con si o no, gracias");
+            String cont= ent.next();
+           
+            
+            if(cont.equalsIgnoreCase("no")){
+                seguir=false;
+            }
         }
-        gp.actualizarCambios(alm);*/
+        
+        
         gp.cerrarAlmacen();
     }
 }
